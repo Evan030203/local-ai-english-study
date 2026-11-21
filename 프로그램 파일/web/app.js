@@ -688,10 +688,62 @@ function ping() {
 }
 
 async function checkOllama() {
+  const before = S.ollamaKey;
   try { S.ollama = await api('/api/ollama'); } catch (e) { S.ollama = { ok: false, error: e.message, models: [] }; }
+  // re-draw the screens that show the AI note only when what they show changed (keeps typed text)
+  S.ollamaKey = [S.ollama.ok, S.ollama.need_model, S.ollama.installed, S.ollama.model].join('|');
   renderStatus();
   if (S.view === 'settings') renderSettings();
   if (S.view === 'home') renderHome();
+  if (S.view === 'talk' && (!S.talk || S.talkSetup) && before !== S.ollamaKey) renderTalkSetup();
+  if (S.ollama.pull && S.ollama.pull.running) watchPull();
+}
+
+/* Ollama missing / off / without a model: one note, used on the home, talk and settings screens. */
+function aiNote(where) {
+  const ol = S.ollama;
+  if (!ol) return '';
+  const tail = where === 'talk' ? '면접·미팅 연습은 AI가 있어야 시작할 수 있어요.'
+    : where === 'home' ? '자막 준비, 받아쓰기, 따라 말하기는 지금도 할 수 있어요.' : '';
+  if (!ol.ok) {
+    if (ol.installed) return `<div class="note warn ai-note">Ollama가 꺼져 있어요. ${tail}
+      <div class="row"><button class="btn small primary" data-act="start-ollama">Ollama 켜기</button><button class="btn small" data-act="recheck-ollama">다시 확인</button></div></div>`;
+    return `<div class="note warn ai-note">AI 대화·분석에 쓰는 <b>Ollama</b>가 이 컴퓨터에 없어요. ${tail}
+      <div class="small" style="margin-top:4px">프로그램 창을 닫고 <b>영어학습도구 실행.bat</b>을 다시 실행하면 설치를 도와줘요. 직접 설치해도 돼요.</div>
+      <div class="row"><a class="btn small" href="https://ollama.com/download" target="_blank" rel="noopener">Ollama 내려받는 곳 열기</a><button class="btn small" data-act="recheck-ollama">다시 확인</button></div></div>`;
+  }
+  if (!ol.need_model) return '';
+  const p = ol.pull || {};
+  if (p.running) return `<div class="note ai-note" data-pullbox>${pullHtml(p)}</div>`;
+  return `<div class="note warn ai-note" data-pullbox>AI 언어 모델이 아직 없어요. ${tail}
+    ${p.error ? `<div class="small" style="margin-top:4px">지난번 받기 실패: ${esc(p.error)}</div>` : ''}
+    <div class="row"><button class="btn small primary" data-act="pull-model">${esc(ol.recommended)} 받기 (약 ${ol.gb}GB)</button>
+    <span class="faint small">한 번만 받으면 그다음부터는 인터넷 없이 써요.</span></div></div>`;
+}
+
+function pullHtml(p) {
+  const f = p.frac == null ? 0 : p.frac;
+  const gb = n => (n / 1e9).toFixed(2);
+  return `<b>${esc(p.model)}</b> 받는 중… <span class="num">${p.frac == null ? '' : Math.floor(f * 100) + '%'}</span>
+    <span class="faint small num">${p.total ? `${gb(p.done)} / ${gb(p.total)} GB` : esc(p.status || '')}</span>
+    <div class="bar" style="margin-top:8px"><i style="width:${(f * 100).toFixed(1)}%"></i></div>
+    <div class="faint xs" style="margin-top:6px">프로그램을 계속 써도 돼요. 창을 닫으면 멈추고, 다시 누르면 받은 데서 이어 받아요.</div>`;
+}
+
+function watchPull() {
+  if (S.pullTimer) return;
+  S.pullTimer = setInterval(async () => {
+    let d;
+    try { d = await api('/api/ollama/pull'); } catch (e) { return; }
+    const p = d.pull;
+    if (S.ollama) S.ollama.pull = p;
+    if (p.running) { document.querySelectorAll('[data-pullbox]').forEach(b => { b.innerHTML = pullHtml(p); }); return; }
+    clearInterval(S.pullTimer); S.pullTimer = null;
+    if (p.finished) toast(`${p.model} 준비 완료! 이제 AI 기능을 쓸 수 있어요.`);
+    else if (p.error) toast('모델을 받지 못했어요: ' + p.error, true);
+    await checkOllama();
+    if (!S.ollama.need_model) document.querySelectorAll('[data-pullbox]').forEach(b => b.remove());
+  }, 1000);
 }
 
 function show(v) {
@@ -807,7 +859,7 @@ function renderHome() {
   el.innerHTML = `
   <div class="view-head"><div><h1>영화</h1>
     <p>공부할 영화를 고르면 영어 대사를 꺼내고, 재생을 준비하고, 로컬 AI가 면접·미팅에 다시 쓸 수 있는 문장을 골라 줘요.</p></div></div>
-  ${ol && !ol.ok ? `<div class="note warn" style="margin-bottom:16px">Ollama가 꺼져 있어요. AI 분석과 면접 연습을 하려면 Ollama를 켜 주세요. 자막 준비, 받아쓰기, 따라 말하기는 지금도 할 수 있어요. <button class="btn small" data-act="recheck-ollama">다시 확인</button></div>` : ''}
+  ${aiNote('home')}
   <div class="home">
     <div>
       <div class="add-box">
@@ -1685,7 +1737,7 @@ function renderTalkSetup() {
   const ol = S.ollama;
   el.innerHTML = `
   <div class="view-head"><div><h1>면접·미팅 연습</h1><p>로컬 AI가 면접관이나 동료가 되어 영어로 묻고, 내 답을 듣고 고쳐 줘요. 질문은 소리로 들려 주니 듣기 연습도 함께 돼요.</p></div></div>
-  ${ol && !ol.ok ? `<div class="note warn" style="margin-bottom:16px">Ollama가 꺼져 있어서 연습을 시작할 수 없어요. Ollama를 켠 뒤 <button class="btn small" data-act="recheck-ollama">다시 확인</button>을 눌러 주세요.</div>` : ''}
+  ${aiNote('talk')}
   <div class="talk">
     <div class="stack">
       <div class="field"><span>상황</span><div class="scen">${st.scenarios.map(s => `
@@ -1947,7 +1999,8 @@ function renderSettings() {
         <div class="row" style="margin-top:10px"><select id="modelSel"><option value="">자동으로 고르기 (추천)</option>${ol.models.map(m => `<option value="${esc(m)}" ${se.model === m ? 'selected' : ''}>${esc(m)}${(ol.capabilities && (ol.capabilities[m] || []).includes('thinking')) ? ' (생각 기능은 꺼서 사용)' : ''}</option>`).join('')}</select>
         <button class="btn small" data-act="recheck-ollama">다시 확인</button></div>
         <div class="faint xs" style="margin-top:6px">qwen3.5:4b처럼 4B 이상 모델이 영어 예문과 피드백을 더 잘 만들어요.</div>`
-      : `<div class="note warn">${esc(ol.error || 'Ollama에 연결하지 못했어요.')}</div><div class="row" style="margin-top:8px"><button class="btn small" data-act="recheck-ollama">다시 확인</button></div>`}
+      : `<div class="small muted" style="margin-bottom:8px">${esc(ol.error || 'Ollama에 연결하지 못했어요.')}</div>`}
+      ${aiNote('settings')}
     </div>
     <div class="panel">
       <h2>음성 인식 (내 목소리 알아듣기)</h2>
@@ -2062,6 +2115,18 @@ async function startJob(path, body) {
 const ACT = {
   nav: a => show(a.dataset.view),
   'recheck-ollama': () => { S.ollama = null; if (S.view === 'settings') renderSettings(); checkOllama(); },
+  'start-ollama': async a => {
+    a.disabled = true; a.textContent = '켜는 중…';
+    try { await api('/api/ollama/start', { body: {} }); toast('Ollama를 켰어요.'); } catch (e) { errToast(e); }
+    checkOllama();
+  },
+  'pull-model': async a => {
+    a.disabled = true;
+    try { const d = await api('/api/ollama/pull', { body: { model: (S.ollama && S.ollama.recommended) || '' } }); if (S.ollama) S.ollama.pull = d.pull; }
+    catch (e) { errToast(e); a.disabled = false; return; }
+    document.querySelectorAll('[data-pullbox]').forEach(b => { b.classList.remove('warn'); b.innerHTML = pullHtml(S.ollama.pull); });
+    watchPull();
+  },
   'pick-movie': async () => {
     try { const d = await api('/api/pick', { body: { kind: 'movie' } }); if (d.path) addMovie(d.path); } catch (e) { errToast(e); }
   },

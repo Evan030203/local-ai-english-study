@@ -32,6 +32,7 @@ call :trypy 3.11
 call :trypy 3.10
 if not defined BASEPY call :trycmd py -3
 if not defined BASEPY call :trycmd python
+if not defined BASEPY call :installpy
 if not defined BASEPY goto nopython
 echo  Using: %BASEPY%
 %BASEPY% "%ENGINE%\setup_env.py"
@@ -55,6 +56,23 @@ if defined BASEPY exit /b 0
 %* -c "import sys" >nul 2>nul
 if errorlevel 1 exit /b 0
 set "BASEPY=%*"
+exit /b 0
+
+:installpy
+rem No usable Python: offer to install the official python.org build with winget (current user only).
+where winget >nul 2>nul
+if errorlevel 1 exit /b 0
+echo.
+echo  Python 3.14 is not installed on this computer.
+echo  It can be installed now from python.org (official build, about 30 MB, for this user only).
+choice /c YN /m " Install Python 3.14 now"
+if errorlevel 2 exit /b 0
+echo.
+winget install --id Python.Python.3.14 -e --scope user --silent --accept-package-agreements --accept-source-agreements
+echo.
+call :trycmd "%LOCALAPPDATA%\Programs\Python\Python314\python.exe"
+if not defined BASEPY if exist "%LOCALAPPDATA%\Programs\Python\Launcher\py.exe" call :trycmd "%LOCALAPPDATA%\Programs\Python\Launcher\py.exe" -3.14
+if not defined BASEPY call :trypy 3.14
 exit /b 0
 
 :noengine

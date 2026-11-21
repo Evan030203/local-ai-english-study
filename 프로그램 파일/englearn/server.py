@@ -405,7 +405,61 @@ def r_ollama(h):
     st = ollama.status()
     if st.get("ok"):
         st["capabilities"] = {m: ollama.capabilities(m) for m in st["models"][:12]}
+    st["need_model"] = bool(st.get("ok")) and not any(ollama._usable(m) for m in st.get("models") or [])
+    st["installed"] = bool(st.get("ok")) or bool(ollama.find_exe())
+    st["recommended"], st["gb"] = ollama.RECOMMENDED, ollama.RECOMMENDED_GB
+    st["pull"] = dict(Pull.state)
     h.ok(st)
+
+
+class Pull:
+    """One model download at a time, started from the screen (POST) and watched by polling (GET)."""
+    lock = threading.Lock()
+    state = {"running": False, "model": "", "frac": None, "status": "", "done": 0, "total": 0,
+             "error": "", "finished": False}
+
+
+def _pull_worker(model):
+    def prog(frac, status, done, total):
+        Pull.state.update(frac=frac, status=status, done=done, total=total)
+    try:
+        ollama.pull(model, on_progress=prog)
+        Pull.state.update(finished=True, frac=1.0, status="success")
+        log.info("model pulled: %s", model)
+    except Exception as e:  # noqa: BLE001
+        Pull.state.update(error=str(e))
+        log.warning("model pull failed: %s", e)
+    finally:
+        Pull.state["running"] = False
+
+
+@route("POST", r"/api/ollama/start")
+def r_ollama_start(h):
+    exe = ollama.find_exe()
+    if not exe:
+        raise HTTPError(404, "이 컴퓨터에서 Ollama를 찾지 못했어요. ollama.com/download 에서 설치해 주세요.")
+    if not ollama.start(exe):
+        raise HTTPError(503, "Ollama가 켜지지 않았어요. 시작 메뉴에서 Ollama를 직접 켜 주세요.")
+    h.ok(started=True)
+
+
+@route("GET", r"/api/ollama/pull")
+def r_pull_state(h):
+    h.ok(pull=dict(Pull.state), recommended=ollama.RECOMMENDED, gb=ollama.RECOMMENDED_GB)
+
+
+@route("POST", r"/api/ollama/pull")
+def r_pull_start(h):
+    model = (h.body().get("model") or ollama.RECOMMENDED).strip()
+    with Pull.lock:
+        if Pull.state["running"]:
+            return h.ok(pull=dict(Pull.state))
+        if not ollama.is_running():
+            raise ollama.OllamaError("Ollama에 연결할 수 없어요. Ollama를 켠 뒤 다시 해 주세요.")
+        Pull.state = {"running": True, "model": model, "frac": None, "status": "시작하는 중", "done": 0,
+                      "total": 0, "error": "", "finished": False}
+        threading.Thread(target=_pull_worker, args=(model,), daemon=True, name="pull").start()
+    h.ok(pull=dict(Pull.state))
 
 
 @route("POST", r"/api/settings")
@@ -1311,6 +1365,10 @@ def serve(open_ui=True):
         print("이미 실행 중이에요. 창을 다시 열게요.")
         open_window(f"http://127.0.0.1:{port}/")
         return 0
+    if not takeover:
+        # Ollama installed, running and with a model? Ask before installing anything.
+        from . import prereq
+        prereq.ensure_ollama()
     srv = None
     # Keep the same port when possible: the window remembers microphone permission per address.
     for attempt in range(40 if takeover else 12):

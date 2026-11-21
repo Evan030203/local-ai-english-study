@@ -540,3 +540,9 @@ button.mic-chip:hover { border-color: #C3CBD8; color: var(--ink-2); }
 .hist-row > .btn:first-child { flex: 1; justify-content: flex-start; text-align: left; }
 .hist-row > .del { color: var(--ink-3); }
 .hist-row > .del:hover, .hist-row > .del:focus-visible { color: var(--miss); }
+
+/* AI (Ollama) setup note: home, talk, settings */
+.ai-note { margin-bottom: 16px; }
+.ai-note .row { margin-top: 10px; }
+.ai-note a.btn { text-decoration: none; }
+.settings .ai-note { margin: 10px 0 0; }

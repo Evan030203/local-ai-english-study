@@ -233,3 +233,102 @@ def status():
         return {"ok": True, "version": v, "models": models, "model": pick_model(models)}
     except OllamaError as e:
         return {"ok": False, "error": str(e), "models": [], "model": ""}
+
+
+# ---------------------------------------------------------------- setup helpers
+RECOMMENDED = "qwen3.5:4b"
+RECOMMENDED_GB = 3.4
+
+
+def is_running(timeout=2):
+    try:
+        with _req("GET", "/api/version", timeout=timeout) as r:
+            r.read()
+        return True
+    except OllamaError:
+        return False
+
+
+def has_usable_model():
+    try:
+        models = list_models()
+    except OllamaError:
+        return False
+    return any(_usable(m) for m in models)
+
+
+def find_exe():
+    """Where Ollama is installed on this computer, or "" (Windows installs per user)."""
+    import os
+    import shutil
+    found = shutil.which("ollama")
+    if found:
+        return found
+    candidates = []
+    if os.environ.get("LOCALAPPDATA"):
+        candidates.append(os.path.join(os.environ["LOCALAPPDATA"], "Programs", "Ollama", "ollama.exe"))
+    if os.environ.get("ProgramFiles"):
+        candidates.append(os.path.join(os.environ["ProgramFiles"], "Ollama", "ollama.exe"))
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    return ""
+
+
+def start(exe=None, wait=25):
+    """Start Ollama in the background (its tray app when there is one) and wait until it answers."""
+    import os
+    import subprocess
+    exe = exe or find_exe()
+    if not exe:
+        return False
+    app = os.path.join(os.path.dirname(exe), "ollama app.exe")
+    flags = 0
+    if os.name == "nt":
+        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) \
+            | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        if os.path.isfile(app):
+            subprocess.Popen([app], creationflags=flags, close_fds=True)
+        else:
+            subprocess.Popen([exe, "serve"], creationflags=flags, close_fds=True,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        return False
+    end = time.time() + wait
+    while time.time() < end:
+        if is_running(timeout=1):
+            return True
+        time.sleep(0.7)
+    return is_running(timeout=2)
+
+
+def pull(model=RECOMMENDED, on_progress=None, should_stop=None):
+    """Download a model through Ollama. on_progress(fraction 0..1 or None, status text, done bytes, total bytes)."""
+    layers = {}
+    with _req("POST", "/api/pull", {"model": model, "name": model, "stream": True}, timeout=3600) as r:
+        for raw in r:
+            if should_stop and should_stop():
+                raise Preempted()
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line.decode("utf-8"))
+            except ValueError:
+                continue
+            if obj.get("error"):
+                raise OllamaError(obj["error"])
+            st = obj.get("status") or ""
+            if obj.get("digest") and obj.get("total"):
+                layers[obj["digest"]] = (int(obj.get("completed") or 0), int(obj["total"]))
+            done = sum(c for c, _ in layers.values())
+            total = sum(t for _, t in layers.values())
+            frac = (done / total) if total else None
+            if on_progress:
+                on_progress(frac, st, done, total)
+            if st == "success":
+                return True
+    if not has_usable_model():
+        raise OllamaError("모델 받기가 끝나지 않았어요. 인터넷 연결을 확인하고 다시 해 주세요.")
+    return True

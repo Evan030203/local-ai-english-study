@@ -2,4 +2,4 @@
 
 APP_NAME = "로컬 AI 영어학습도구"
 APP_ID = "englearn-local"
-VERSION = "1.2.1"
+VERSION = "1.3.0"
