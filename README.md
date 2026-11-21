@@ -31,7 +31,7 @@
 | | |
 |---|---|
 | 운영체제 | Windows 10 또는 11 (64비트) |
-| 파이썬 | 3.10 이상 ([python.org](https://www.python.org/downloads/)) |
+| 파이썬 | 3.10~3.14. [파이썬 설치 관리자](https://www.python.org/downloads/)만 있으면 3.14를 알아서 준비해요 |
 | 로컬 AI | [Ollama](https://ollama.com/)와 언어 모델 1개 (추천: `qwen3.5:4b`) |
 | 창 | Microsoft Edge (Windows에 기본으로 들어 있어요) |
 | 메모리 | 8GB 이상, 16GB 권장 |
@@ -43,17 +43,17 @@
 
 ## 설치와 실행
 
-1. **파이썬 설치** — python.org에서 받아 설치해요. 설치 첫 화면에서 "Add python.exe to PATH"를 체크해 두면 좋아요.
-2. **Ollama 설치** — ollama.com에서 받아 설치한 뒤, 명령 프롬프트에서 모델을 받아요.
+**[그림으로 보는 설치 안내](INSTALL.md)** — 처음이라면 이 페이지를 따라 하세요.
+
+1. **파이썬 설치 관리자** — Microsoft Store에서 `Python Install Manager`를 받아요. 파이썬 버전은 프로그램이 알아서 맞춰요.
+2. **Ollama 설치와 모델 받기** — [ollama.com](https://ollama.com/download)에서 설치한 뒤, 명령 프롬프트에서:
    ```
    ollama pull qwen3.5:4b
    ```
-3. **프로그램 받기** — 오른쪽 [Releases](https://github.com/Evan030203/local-ai-english-study/releases/latest)에서 `local-ai-english-study-v1.2.0.zip`을 받아 원하는 곳(예: 바탕화면)에 압축을 풀어요.
+3. **프로그램 받기** — [Releases](https://github.com/Evan030203/local-ai-english-study/releases/latest)에서 `local-ai-english-study-v(버전).zip`을 받아 원하는 곳(예: 바탕화면)에 압축을 풀어요.
 4. **실행** — `로컬 AI 영어학습도구` 폴더 안의 **`영어학습도구 실행.bat`** 을 두 번 클릭해요.
-   - 처음 한 번은 필요한 부품을 설치해요. (3~10분, 인터넷 필요)
-   - 처음 실행할 때 음성 인식 모델(약 480MB)과 영어 음성 모델(약 120MB)을 자동으로 받아요. 한 번 받으면 그다음부터는 인터넷 없이 돼요.
-   - "Windows의 PC 보호" 창이나 보안 경고가 뜨면 [추가 정보] → [실행]을 눌러요.
-     받은 zip 파일을 오른쪽 클릭 → 속성에서 '차단 해제'를 체크한 뒤 압축을 풀면 이 창이 뜨지 않아요.
+   - 처음 한 번은 필요한 부품과 음성 인식(약 480MB)·영어 음성(약 120MB) 모델을 자동으로 받아요. (3~10분, 인터넷 필요)
+   - "Windows의 PC 보호" 창이 뜨면 [추가 정보] → [실행]을 눌러요.
 5. 처음이라면 **[예제 장면으로 먼저 해 보기]** 를 눌러 보세요. 짧은 영어 면접과 팀 회의 장면이에요.
 
 자세한 사용법은 압축을 푼 폴더의 `설명서와 예제\사용 설명서.txt`에 있어요.
@@ -85,7 +85,8 @@
 
 ## 문제가 생기면
 
-- **"Python 3.10 or newer is needed"** — 파이썬을 설치하고 다시 실행해요.
+- **"Python 3.10 - 3.14 is needed"** — [파이썬 설치 관리자](INSTALL.md#1-파이썬-설치-관리자)를 설치하고 다시 실행해요.
+- **"음성 부품(onnxruntime)을 아직 찾을 수 없어요"** — 명령 프롬프트에서 `py install 3.14`를 실행하고 다시 실행해요.
 - **"Ollama에 연결할 수 없어요"** — Ollama를 켠 뒤 [다시 확인]을 눌러요.
 - **처음 설치가 중간에 실패했어요** — 인터넷을 확인하고 다시 실행해요. 그래도 안 되면 `프로그램 파일\.venv` 폴더를 지우고 다시 실행해요.
 - **창이 안 열려요** — 검은 창에 나온 주소(`http://127.0.0.1:8765`)를 Edge 주소창에 넣어요.

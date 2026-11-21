@@ -3,8 +3,12 @@
 영어학습도구 실행.bat 이 컴퓨터에 설치된 파이썬으로 이 파일을 실행합니다.
 """
 import os
+import shutil
 import subprocess
 import sys
+
+# Newest Python checked to have every part (onnxruntime had no 3.15 build in Nov 2026).
+NEWEST_CHECKED = (3, 15)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VENV = os.path.join(HERE, ".venv")
@@ -17,6 +21,14 @@ def say(msg=""):
         print(msg, flush=True)
     except Exception:  # noqa: BLE001
         print(msg.encode("ascii", "replace").decode(), flush=True)
+
+
+def speech_parts_available():
+    """Speech recognition and the English voice both need onnxruntime, which ships only as
+    prebuilt wheels. Ask pip whether one exists for this Python before installing anything."""
+    r = subprocess.run([PY, "-m", "pip", "index", "versions", "onnxruntime", "--disable-pip-version-check"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return r.returncode == 0
 
 
 def main():
@@ -35,6 +47,15 @@ def main():
             return 1
     say("  2/3 pip 준비 중…")
     subprocess.call([PY, "-m", "pip", "install", "--upgrade", "pip", "--disable-pip-version-check", "-q"])
+    if sys.version_info >= NEWEST_CHECKED and not speech_parts_available():
+        ver = sys.version.split()[0]
+        say(f"  [!] 이 파이썬({ver})에서 쓸 음성 부품(onnxruntime)을 아직 찾을 수 없어요.")
+        say("      파이썬 3.14를 설치한 뒤 이 프로그램을 다시 실행해 주세요.")
+        say("      - 파이썬 설치 관리자가 있으면 명령 프롬프트에서:  py install 3.14")
+        say("      - 아니면 https://www.python.org/downloads/ 에서 Python 3.14를 설치")
+        say("      (인터넷이 끊겨 있어도 이 안내가 나올 수 있어요.)")
+        shutil.rmtree(VENV, ignore_errors=True)
+        return 1
     say("  3/3 부품 설치 중… (영상 도구, 음성 인식, 영어 음성)")
     with open(REQ, encoding="utf-8") as fh:
         reqs = [l.strip() for l in fh if l.strip() and not l.startswith("#")]
