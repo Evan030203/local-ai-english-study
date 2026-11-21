@@ -1,0 +1,6 @@
+# Windows batch files must keep CRLF line endings exactly as committed.
+*.bat -text
+*.mp4 binary
+*.wav binary
+*.woff2 binary
+*.png binary

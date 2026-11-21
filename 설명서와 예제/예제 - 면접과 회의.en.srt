@@ -1,0 +1,136 @@
+1
+00:00:03,000 --> 00:00:06,190
+Hi, you must be Daniel. Thanks for coming in today.
+
+2
+00:00:06,490 --> 00:00:09,561
+Thank you for having me. It's nice to meet you.
+
+3
+00:00:09,861 --> 00:00:12,529
+Nice to meet you too. Please, have a seat.
+
+4
+00:00:12,529 --> 00:00:15,030
+So, could you tell me a little bit about yourself?
+
+5
+00:00:15,330 --> 00:00:23,028
+Sure. I just graduated with a degree in logistics, and I've been working part-time at a shipping company for about a year.
+
+6
+00:00:23,328 --> 00:00:25,855
+That sounds interesting. What did you do there?
+
+7
+00:00:26,155 --> 00:00:30,393
+I was in charge of tracking shipments and updating our customers.
+
+8
+00:00:30,393 --> 00:00:33,423
+It taught me how to stay calm when things go wrong.
+
+9
+00:00:33,723 --> 00:00:35,701
+Good. Why do you want to work with us?
+
+10
+00:00:36,001 --> 00:00:43,485
+To be honest, I've always wanted to work on a global team, and I think my experience is a good fit for this role.
+
+11
+00:00:43,785 --> 00:00:45,808
+What would you say is your biggest strength?
+
+12
+00:00:46,108 --> 00:00:52,287
+I'd say I'm a fast learner. When I don't know something, I ask questions and figure it out quickly.
+
+13
+00:00:52,587 --> 00:00:54,110
+And what about a weakness?
+
+14
+00:00:54,410 --> 00:01:00,538
+Well, I used to take on too much at once. Now I make a list and focus on what matters most.
+
+15
+00:01:00,838 --> 00:01:03,733
+That makes sense. Do you have any questions for me?
+
+16
+00:01:04,033 --> 00:01:08,880
+Yes, actually. What does a typical day look like for someone in this position?
+
+17
+00:01:09,180 --> 00:01:15,336
+Good question. You'd be working closely with our operations team, so we're gonna have a lot of meetings at first.
+
+18
+00:01:15,636 --> 00:01:18,623
+That sounds great. I'm looking forward to it.
+
+19
+00:01:18,923 --> 00:01:21,653
+Great. We'll get back to you by the end of the week.
+
+20
+00:01:21,953 --> 00:01:24,040
+Thank you so much for your time.
+
+21
+00:01:26,590 --> 00:01:30,460
+Okay, let's get started. Leo, can you give us a quick update?
+
+22
+00:01:30,760 --> 00:01:36,378
+Sure. The new tracking system is almost ready, but we're running a little behind schedule.
+
+23
+00:01:36,678 --> 00:01:38,410
+How far behind are we?
+
+24
+00:01:38,710 --> 00:01:43,748
+About two days. We found a problem with the data, and we're still working on it.
+
+25
+00:01:44,048 --> 00:01:46,105
+I see. Daniel, what do you think?
+
+26
+00:01:46,405 --> 00:01:51,654
+I think we could ask the IT team for help. They fixed something similar last month.
+
+27
+00:01:51,954 --> 00:01:54,527
+That's a good point. I didn't know that.
+
+28
+00:01:54,827 --> 00:01:57,341
+Let's do that. Can you set up a call with them?
+
+29
+00:01:57,641 --> 00:02:00,626
+Sure. Let me check their schedule and get back to you.
+
+30
+00:02:00,926 --> 00:02:03,989
+One more thing. Could you send me the report by Friday?
+
+31
+00:02:04,289 --> 00:02:07,186
+Sorry, did you say Friday or Thursday?
+
+32
+00:02:07,486 --> 00:02:10,304
+Friday is fine. Does that work for everyone?
+
+33
+00:02:10,604 --> 00:02:11,806
+Works for me.
+
+34
+00:02:12,106 --> 00:02:14,766
+Great. That's all for today. Thanks, everyone.
+

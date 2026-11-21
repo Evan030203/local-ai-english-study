@@ -1,0 +1,13 @@
+# 각자의 컴퓨터에서 생기는 것 (올리지 않음)
+프로그램 파일/.venv/
+프로그램 파일/모델/
+프로그램 파일/로그/
+프로그램 파일/.app-window/
+학습 기록/
+
+__pycache__/
+*.pyc
+*.part
+Thumbs.db
+desktop.ini
+.DS_Store
